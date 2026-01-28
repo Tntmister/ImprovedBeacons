@@ -3,7 +3,7 @@
 	"id": "more-beacon-levels",
 	"version": "${version}",
 	"name": "More Beacon Levels",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Improves the functionality of beacons, adding more layers with additional effects, and ways to increase their range.",
 	"authors": [
 		"Me!"
 	],
