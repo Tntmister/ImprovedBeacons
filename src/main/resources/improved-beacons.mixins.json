@@ -1,9 +1,9 @@
 {
   "required": true,
-  "package": "tntmister.morebeaconlevels.mixin",
+  "package": "tntmister.improvedbeacons.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "BeaconBlockEntityMixin"
+    "BeaconBlockEntityEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

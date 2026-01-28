@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "tntmister.morebeaconlevels.mixin.client",
+	"package": "tntmister.improvedbeacons.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"ExampleClientMixin"

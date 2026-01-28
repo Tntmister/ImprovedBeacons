@@ -1,4 +1,4 @@
-package tntmister.morebeaconlevels.mixin;
+package tntmister.improvedbeacons.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.core.BlockPos;
@@ -17,24 +17,24 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
-import tntmister.morebeaconlevels.BeaconMajorityBlockController;
+import tntmister.improvedbeacons.BeaconBlockEntityController;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Mixin(BeaconBlockEntity.class)
-public abstract class BeaconBlockEntityMixin implements BeaconMajorityBlockController {
+public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityController {
 
     @Unique
     Block majorityBlock;
 
     @Override
-    public Optional<Block> morebeaconlevels$getMajorityBlock() {
+    public Optional<Block> improvedbeacons$getMajorityBlock() {
         return Optional.ofNullable(this.majorityBlock);
     }
 
     @Override
-    public void morebeaconlevels$setMajorityBlock(Block block) {
+    public void improvedbeacons$setMajorityBlock(Block block) {
         this.majorityBlock = block;
     }
 
@@ -42,11 +42,11 @@ public abstract class BeaconBlockEntityMixin implements BeaconMajorityBlockContr
     @Unique
     double power = 1;
 
-    public double morebeaconlevels$getPower() {
+    public double improvedbeacons$getPower() {
         return this.power;
     }
 
-    public void morebeaconlevels$setPower(double power) {
+    public void improvedbeacons$setPower(double power) {
         this.power = power;
     }
 
@@ -100,21 +100,21 @@ public abstract class BeaconBlockEntityMixin implements BeaconMajorityBlockContr
             }
             blockMap.putAll(blockLayerMap);
         }
-        BeaconMajorityBlockController beaconBlockController = ((BeaconMajorityBlockController) beaconBlockEntity);
+        BeaconBlockEntityController beaconBlockController = ((BeaconBlockEntityController) beaconBlockEntity);
         // find the most common block in the pyramid
         blockMap.entrySet().stream().max(Map.Entry.comparingByValue()).ifPresentOrElse(
-                blockIntegerEntry -> beaconBlockController.morebeaconlevels$setMajorityBlock(blockIntegerEntry.getKey()),
-                () -> beaconBlockController.morebeaconlevels$setMajorityBlock(null)
+                blockIntegerEntry -> beaconBlockController.improvedbeacons$setMajorityBlock(blockIntegerEntry.getKey()),
+                () -> beaconBlockController.improvedbeacons$setMajorityBlock(null)
         );
 
         // calculates the beacon's power based on the average sum of the power of the blocks that make up the pyramid
         // example: a beacon that's 50% iron and 50% netherite has power 0.5 * 1 + 0.5 * 4 = 2.5
         int totalBlocks = blockMap.values().stream().reduce(0, Integer::sum);
         AtomicReference<Double> power = new AtomicReference<>(0.0);
-        if (beaconBlockController.morebeaconlevels$getMajorityBlock().isPresent())
+        if (beaconBlockController.improvedbeacons$getMajorityBlock().isPresent())
             blockMap.forEach((block, count) -> power.updateAndGet(v -> (v + count * BLOCK_POWER.get(block) / totalBlocks)));
         else power.set(1.0);
-        beaconBlockController.morebeaconlevels$setPower(power.get());
+        beaconBlockController.improvedbeacons$setPower(power.get());
 
         return completeLayers;
     }
@@ -122,8 +122,7 @@ public abstract class BeaconBlockEntityMixin implements BeaconMajorityBlockContr
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/BeaconBlockEntity;applyEffects(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;ILnet/minecraft/core/Holder;Lnet/minecraft/core/Holder;)V"))
     private static void applyEffects(Level level, BlockPos blockPos, int i, @Nullable Holder<MobEffect> holder, @Nullable Holder<MobEffect> holder2, @Local(argsOnly = true) BeaconBlockEntity beaconBlockEntity) {
         if (!level.isClientSide && holder != null) {
-            double d = ((BeaconMajorityBlockController) beaconBlockEntity).morebeaconlevels$getPower() * i * 10 + 16;
-            System.out.println("Beacon Range: " + d);
+            double d = ((BeaconBlockEntityController) beaconBlockEntity).improvedbeacons$getPower() * i * 10 + 16;
             int j = 0;
             if (i >= 4 && Objects.equals(holder, holder2)) {
                 j = 1;

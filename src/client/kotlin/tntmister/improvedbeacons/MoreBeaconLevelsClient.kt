@@ -1,8 +1,8 @@
-package tntmister.morebeaconlevels
+package tntmister.improvedbeacons
 
 import net.fabricmc.api.ClientModInitializer
 
-object MoreBeaconLevelsClient : ClientModInitializer {
+object ImprovedBeaconsClient : ClientModInitializer {
 	override fun onInitializeClient() {
 		// This entrypoint is suitable for setting up client-specific logic, such as rendering.
 	}

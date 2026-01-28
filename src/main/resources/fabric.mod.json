@@ -1,8 +1,8 @@
 {
 	"schemaVersion": 1,
-	"id": "more-beacon-levels",
+	"id": "improved-beacons",
 	"version": "${version}",
-	"name": "More Beacon Levels",
+	"name": "Improved Beacons",
 	"description": "Improves the functionality of beacons, adding more layers with additional effects, and ways to increase their range.",
 	"authors": [
 		"Me!"
@@ -12,26 +12,26 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/more-beacon-levels/icon.png",
+	"icon": "assets/improved-beacons/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
 			{
-				"value": "tntmister.morebeaconlevels.MoreBeaconLevels",
+				"value": "tntmister.improvedbeacons.ImprovedBeacons",
 				"adapter": "kotlin"
 			}
 		],
 		"client": [
 			{
-				"value": "tntmister.morebeaconlevels.MoreBeaconLevelsClient",
+				"value": "tntmister.improvedbeacons.ImprovedBeaconsClient",
 				"adapter": "kotlin"
 			}
 		]
 	},
 	"mixins": [
-		"more-beacon-levels.mixins.json",
+		"improved-beacons.mixins.json",
 		{
-			"config": "more-beacon-levels.client.mixins.json",
+			"config": "improved-beacons.client.mixins.json",
 			"environment": "client"
 		}
 	],

@@ -1,4 +1,4 @@
-package tntmister.morebeaconlevels.mixin.client;
+package tntmister.improvedbeacons.mixin.client;
 
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
