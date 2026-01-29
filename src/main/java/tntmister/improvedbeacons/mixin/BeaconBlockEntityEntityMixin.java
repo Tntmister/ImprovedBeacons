@@ -1,25 +1,26 @@
 package tntmister.improvedbeacons.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import tntmister.improvedbeacons.BeaconBlockEntityController;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Mixin(BeaconBlockEntity.class)
@@ -42,17 +43,12 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
     @Unique
     double power = 1;
 
-    //hack to be able to access a beacon's power inside static methods (applyEffects)
-    @Unique
-    private static double currentlyTickedBeaconPower = 1;
-
     public double improvedbeacons$getPower() {
         return this.power;
     }
 
     public void improvedbeacons$setPower(double power) {
         this.power = power;
-        currentlyTickedBeaconPower = power;
     }
 
     //ideas
@@ -72,40 +68,38 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
         put(Blocks.NETHERITE_BLOCK, 4.0);
     }};
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/BeaconBlockEntity;updateBase(Lnet/minecraft/world/level/Level;III)I"))
-    private static int updateBase(Level level, int x, int y, int z, @Local(argsOnly = true) BeaconBlockEntity beaconBlockEntity) {
-        int completeLayers = 0;
+    @Inject(method = "updateBase", at = @At("HEAD"))
+    private static void updateBaseHEAD(Level level, int x, int y, int z, CallbackInfoReturnable<Integer> cir, @Share("blockEntity") LocalRef<BeaconBlockEntity> beaconBlockEntityRef, @Share("blockMap") LocalRef<Map<Block, Integer>> blockMapRef){
+        beaconBlockEntityRef.set(level.getBlockEntity(new BlockPos(x, y ,z), BlockEntityType.BEACON).orElseThrow());
+        blockMapRef.set(new HashMap<>());
+    }
 
-        Map<Block, Integer> blockMap = new HashMap<>();
+    @ModifyConstant(method = "updateBase", constant = @Constant(intValue = 4))
+    private static int updateBaseMaxLevels(int value){
+        return NEW_MAX_LEVELS;
+    }
 
-        for (int layer = 1; layer <= NEW_MAX_LEVELS; completeLayers = layer++) {
-            int layerY = y - layer;
-            if (layerY < level.getMinBuildHeight()) {
-                break;
-            }
+    @Inject(method = "updateBase", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getMinBuildHeight()I"))
+    private static void updateBaseLayerLoopHEAD(Level level, int x, int y, int z, CallbackInfoReturnable<Integer> cir, @Share("blockLayerMap") LocalRef<Map<Block, Integer>> blockLayerMapRef){
+        blockLayerMapRef.set(new HashMap<>());
+    }
 
-            boolean bl = true;
-
-            Map<Block, Integer> blockLayerMap = new HashMap<>();
-
-            for (int offsetX = x - layer; offsetX <= x + layer && bl; offsetX++) {
-                for (int offsetZ = z - layer; offsetZ <= z + layer; offsetZ++) {
-                    BlockState blockState = level.getBlockState(new BlockPos(offsetX, layerY, offsetZ));
-                    if (!blockState.is(BlockTags.BEACON_BASE_BLOCKS)) {
-                        bl = false;
-                        break;
-                    } else {
-                        blockLayerMap.merge(blockState.getBlock(), 1, Integer::sum);
-                    }
-                }
-            }
-
-            if (!bl) {
-                break;
-            }
-            blockMap.putAll(blockLayerMap);
+    @ModifyExpressionValue(method = "updateBase", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"))
+    private static BlockState updateBaseInnerLoop(BlockState blockState, @Share("blockMap") LocalRef<Map<Block, Integer>> blockMapRef, @Share("blockLayerMap") LocalRef<Map<Block, Integer>> blockLayerMapRef){
+        if (blockState.is(BlockTags.BEACON_BASE_BLOCKS)) {
+            blockMapRef.get().merge(blockState.getBlock(), 1, Integer::sum);
+            blockLayerMapRef.get().merge(blockState.getBlock(), 1, Integer::sum);
+        } else {
+            blockLayerMapRef.get().forEach(((block, count) -> blockMapRef.get().merge(block, -count, Integer::sum)));
         }
-        BeaconBlockEntityController beaconBlockController = ((BeaconBlockEntityController) beaconBlockEntity);
+        return blockState;
+    }
+
+    @Inject(method = "updateBase", at = @At("TAIL"))
+    private static void updateBaseTAIL(Level level, int x, int y, int z, CallbackInfoReturnable<Integer> cir, @Share("blockEntity") LocalRef<BeaconBlockEntity> beaconBlockEntityRef, @Share("blockMap") LocalRef<Map<Block, Integer>> blockMapRef){
+        BeaconBlockEntityController beaconBlockController = ((BeaconBlockEntityController) beaconBlockEntityRef.get());
+        System.out.println(blockMapRef.get());
+        Map<Block, Integer> blockMap = blockMapRef.get();
         // find the most common block in the pyramid
         blockMap.entrySet().stream().max(Map.Entry.comparingByValue()).ifPresentOrElse(
                 blockIntegerEntry -> beaconBlockController.improvedbeacons$setMajorityBlock(blockIntegerEntry.getKey()),
@@ -120,12 +114,10 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
             blockMap.forEach((block, count) -> power.updateAndGet(v -> (v + count * BLOCK_POWER.get(block) / totalBlocks)));
         else power.set(1.0);
         beaconBlockController.improvedbeacons$setPower(power.get());
-
-        return completeLayers;
     }
 
     @ModifyVariable(method = "applyEffects", at = @At("STORE"))
-    private static double applyEffects(double radius){
-        return radius * currentlyTickedBeaconPower;
+    private static double applyEffects(double radius, @Local(argsOnly = true) Level level, @Local(argsOnly = true) BlockPos blockPos){
+        return (level.getBlockEntity(blockPos, BlockEntityType.BEACON)).map(blockEntity -> ((BeaconBlockEntityController) blockEntity).improvedbeacons$getPower() * radius).orElse(radius);
     }
 }
