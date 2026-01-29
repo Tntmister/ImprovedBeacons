@@ -42,12 +42,17 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
     @Unique
     double power = 1;
 
+    //hack to be able to access a beacon's power inside static methods (applyEffects)
+    @Unique
+    private static double currentlyTickedBeaconPower = 1;
+
     public double improvedbeacons$getPower() {
         return this.power;
     }
 
     public void improvedbeacons$setPower(double power) {
         this.power = power;
+        currentlyTickedBeaconPower = power;
     }
 
     //ideas
@@ -119,28 +124,8 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
         return completeLayers;
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/BeaconBlockEntity;applyEffects(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;ILnet/minecraft/core/Holder;Lnet/minecraft/core/Holder;)V"))
-    private static void applyEffects(Level level, BlockPos blockPos, int i, @Nullable Holder<MobEffect> holder, @Nullable Holder<MobEffect> holder2, @Local(argsOnly = true) BeaconBlockEntity beaconBlockEntity) {
-        if (!level.isClientSide && holder != null) {
-            double d = ((BeaconBlockEntityController) beaconBlockEntity).improvedbeacons$getPower() * i * 10 + 16;
-            int j = 0;
-            if (i >= 4 && Objects.equals(holder, holder2)) {
-                j = 1;
-            }
-
-            int k = (9 + i * 2) * 20;
-            AABB aABB = new AABB(blockPos).inflate(d).expandTowards(0.0, level.getHeight(), 0.0);
-            List<Player> list = level.getEntitiesOfClass(Player.class, aABB);
-
-            for (Player player : list) {
-                player.addEffect(new MobEffectInstance(holder, k, j, true, true));
-            }
-
-            if (i >= 4 && !Objects.equals(holder, holder2) && holder2 != null) {
-                for (Player player : list) {
-                    player.addEffect(new MobEffectInstance(holder2, k, 0, true, true));
-                }
-            }
-        }
+    @ModifyVariable(method = "applyEffects", at = @At("STORE"))
+    private static double applyEffects(double radius){
+        return radius * currentlyTickedBeaconPower;
     }
 }
