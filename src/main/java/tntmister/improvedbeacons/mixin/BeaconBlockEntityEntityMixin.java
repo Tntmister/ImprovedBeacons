@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -15,8 +16,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import tntmister.improvedbeacons.BeaconBlockEntityController;
+import tntmister.improvedbeacons.advancements.AdvancementCriteria;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -115,9 +118,15 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
         beaconBlockController.improvedbeacons$setPower(power.get());
     }
 
-    @ModifyVariable(method = "applyEffects", at = @At("STORE"))
-    private static double applyEffects(double radius, @Local(argsOnly = true) Level level, @Local(argsOnly = true) BlockPos blockPos){
-        return (level.getBlockEntity(blockPos, BlockEntityType.BEACON)).map(blockEntity -> ((BeaconBlockEntityController) blockEntity).improvedbeacons$getPower() * radius).orElse(radius);
+    // new beacon radius formula
+    // base radius of 16, with additional 10 radius per pyramid layer, increased
+    @ModifyVariable(method = "applyEffects", at = @At("STORE"), name = "d")
+    private static double applyEffects(double radius, @Local(argsOnly = true) Level level, @Local(argsOnly = true) BlockPos blockPos, @Local(argsOnly = true) int beaconLevel){
+        return level.getBlockEntity(blockPos, BlockEntityType.BEACON).map(blockEntity ->
+                (1 +  3 * ((BeaconBlockEntityController) blockEntity).improvedbeacons$getPower() / 100) * (beaconLevel * 8 + 16)
+        ).orElse(radius);
+    }
+
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/critereon/ConstructBeaconTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;I)V"))
     private static void triggerAdvancement(Level level, BlockPos pos, BlockState state, BeaconBlockEntity blockEntity, CallbackInfo ci, @Local(name = "serverPlayer") ServerPlayer serverPlayer){
         AdvancementCriteria.MAXED_BEACON.trigger(serverPlayer, ((BeaconBlockEntityController)blockEntity).improvedbeacons$getPower());
