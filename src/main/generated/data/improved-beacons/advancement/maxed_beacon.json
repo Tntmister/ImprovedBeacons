@@ -1,0 +1,36 @@
+{
+  "parent": "minecraft:nether/create_full_beacon",
+  "criteria": {
+    "maxed_beacon": {
+      "conditions": {
+        "beaconPower": 100
+      },
+      "trigger": "improved-beacons:maxed_beacon"
+    }
+  },
+  "display": {
+    "description": {
+      "extra": [
+        {
+          "italic": true,
+          "text": "this"
+        },
+        " is to go even further beyond!"
+      ],
+      "text": "And "
+    },
+    "frame": "challenge",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "minecraft:beacon"
+    },
+    "title": "Overcompensator"
+  },
+  "requirements": [
+    [
+      "maxed_beacon"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

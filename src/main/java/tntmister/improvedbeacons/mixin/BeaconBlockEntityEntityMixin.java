@@ -98,7 +98,6 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
     @Inject(method = "updateBase", at = @At("TAIL"))
     private static void updateBaseTAIL(Level level, int x, int y, int z, CallbackInfoReturnable<Integer> cir, @Share("blockEntity") LocalRef<BeaconBlockEntity> beaconBlockEntityRef, @Share("blockMap") LocalRef<Map<Block, Integer>> blockMapRef){
         BeaconBlockEntityController beaconBlockController = ((BeaconBlockEntityController) beaconBlockEntityRef.get());
-        System.out.println(blockMapRef.get());
         Map<Block, Integer> blockMap = blockMapRef.get();
         // find the most common block in the pyramid
         blockMap.entrySet().stream().max(Map.Entry.comparingByValue()).ifPresentOrElse(
@@ -119,5 +118,14 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
     @ModifyVariable(method = "applyEffects", at = @At("STORE"))
     private static double applyEffects(double radius, @Local(argsOnly = true) Level level, @Local(argsOnly = true) BlockPos blockPos){
         return (level.getBlockEntity(blockPos, BlockEntityType.BEACON)).map(blockEntity -> ((BeaconBlockEntityController) blockEntity).improvedbeacons$getPower() * radius).orElse(radius);
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/critereon/ConstructBeaconTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;I)V"))
+    private static void triggerAdvancement(Level level, BlockPos pos, BlockState state, BeaconBlockEntity blockEntity, CallbackInfo ci, @Local(name = "serverPlayer") ServerPlayer serverPlayer){
+        AdvancementCriteria.MAXED_BEACON.trigger(serverPlayer, ((BeaconBlockEntityController)blockEntity).improvedbeacons$getPower());
+    }
+
+    // fixes Beaconator advancement for levels > 4
+    @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/critereon/ConstructBeaconTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;I)V"))
+    private static int injected(int levels){
+        return Math.min(levels, 4);
     }
 }

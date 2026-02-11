@@ -19,6 +19,9 @@
 		],
 		"client": [
 			"tntmister.improvedbeacons.ImprovedBeaconsClient"
+		],
+		"fabric-datagen": [
+			"tntmister.improvedbeacons.datagen.DataGenerator"
 		]
 	},
 	"mixins": [
