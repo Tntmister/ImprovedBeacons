@@ -42,15 +42,15 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
         this.majorityBlock = block;
     }
 
-    // affects radius, 1 = full iron, 1.5 = full gold, 2 = full diamond/emerald, 4 = full netherite
+    // affects radius, 0 = full iron, 37 = full gold, 50 = full diamond/emerald, 100 = full netherite
     @Unique
-    double power = 1;
+    int power = 0;
 
-    public double improvedbeacons$getPower() {
+    public int improvedbeacons$getPower() {
         return this.power;
     }
 
-    public void improvedbeacons$setPower(double power) {
+    public void improvedbeacons$setPower(int power) {
         this.power = power;
     }
 
@@ -63,12 +63,12 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
     @Unique
     private static final int NEW_MAX_LEVELS = 6;
     @Unique
-    private static final Map<Block, Double> BLOCK_POWER = new HashMap<>(){{
-        put(Blocks.IRON_BLOCK, 1.0);
-        put(Blocks.GOLD_BLOCK, 1.5);
-        put(Blocks.DIAMOND_BLOCK, 2.0);
-        put(Blocks.EMERALD_BLOCK, 2.0);
-        put(Blocks.NETHERITE_BLOCK, 4.0);
+    private static final Map<Block, Integer> BLOCK_POWER = new HashMap<>(){{
+        put(Blocks.IRON_BLOCK, 0);
+        put(Blocks.GOLD_BLOCK, 37);
+        put(Blocks.DIAMOND_BLOCK, 50);
+        put(Blocks.EMERALD_BLOCK, 50);
+        put(Blocks.NETHERITE_BLOCK, 100);
     }};
 
     @Inject(method = "updateBase", at = @At("HEAD"))
@@ -109,12 +109,11 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
         );
 
         // calculates the beacon's power based on the average sum of the power of the blocks that make up the pyramid
-        // example: a beacon that's 50% iron and 50% netherite has power 0.5 * 1 + 0.5 * 4 = 2.5
+        // example: a beacon that's 50% iron and 50% netherite has power 0.5 * 0 + 0.5 * 100 = 50
         int totalBlocks = blockMap.values().stream().reduce(0, Integer::sum);
-        AtomicReference<Double> power = new AtomicReference<>(0.0);
+        AtomicReference<Integer> power = new AtomicReference<>(0);
         if (beaconBlockController.improvedbeacons$getMajorityBlock().isPresent())
             blockMap.forEach((block, count) -> power.updateAndGet(v -> (v + count * BLOCK_POWER.get(block) / totalBlocks)));
-        else power.set(1.0);
         beaconBlockController.improvedbeacons$setPower(power.get());
     }
 
@@ -123,7 +122,7 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
     @ModifyVariable(method = "applyEffects", at = @At("STORE"), name = "d")
     private static double applyEffects(double radius, @Local(argsOnly = true) Level level, @Local(argsOnly = true) BlockPos blockPos, @Local(argsOnly = true) int beaconLevel){
         return level.getBlockEntity(blockPos, BlockEntityType.BEACON).map(blockEntity ->
-                (1 +  3 * ((BeaconBlockEntityController) blockEntity).improvedbeacons$getPower() / 100) * (beaconLevel * 8 + 16)
+                (1 +  3 * (double)((BeaconBlockEntityController) blockEntity).improvedbeacons$getPower() / 100) * (beaconLevel * 8 + 16)
         ).orElse(radius);
     }
 

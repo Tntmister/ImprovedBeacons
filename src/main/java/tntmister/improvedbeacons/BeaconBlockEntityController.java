@@ -11,10 +11,10 @@ public interface BeaconBlockEntityController {
     default void improvedbeacons$setMajorityBlock(Block block){
         throw new UnsupportedOperationException();
     }
-    default double improvedbeacons$getPower(){
+    default int improvedbeacons$getPower(){
         throw new UnsupportedOperationException();
     }
-    default void improvedbeacons$setPower(double power){
+    default void improvedbeacons$setPower(int power){
         throw new UnsupportedOperationException();
     }
 }
