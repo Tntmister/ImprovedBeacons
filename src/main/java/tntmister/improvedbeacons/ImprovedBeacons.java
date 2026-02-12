@@ -9,6 +9,9 @@ public class ImprovedBeacons implements ModInitializer {
 	public static final String MOD_ID = "improved-beacons";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
+	// number of entries added to the BeaconBlockEntity ContainerData (can't add public static to mixin)
+	public static final int DATA_NUM_VALUES = 2;
+
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Improved Beacons initialised!");

@@ -1,10 +1,17 @@
 {
-	"required": true,
-	"package": "tntmister.improvedbeacons.mixin.client",
-	"compatibilityLevel": "JAVA_21",
-	"client": [
-	],
-	"injectors": {
-		"defaultRequire": 1
-	}
+  "required": true,
+  "package": "tntmister.improvedbeacons.mixin.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "BeaconScreenMixin"
+  ],
+  "mixinextras": {
+    "minVersion": "0.5.0"
+  },
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "BeaconMenuMixin"
+  ]
 }

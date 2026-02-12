@@ -24,6 +24,7 @@
 			"tntmister.improvedbeacons.datagen.DataGenerator"
 		]
 	},
+	"accessWidener" : "improved-beacons.classtweaker",
 	"mixins": [
 		"improved-beacons.mixins.json",
 		{

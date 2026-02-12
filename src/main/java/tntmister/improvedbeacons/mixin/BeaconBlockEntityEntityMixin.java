@@ -5,38 +5,65 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.inventory.BeaconMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import tntmister.improvedbeacons.BeaconBlockEntityController;
+import tntmister.improvedbeacons.ImprovedBeacons;
 import tntmister.improvedbeacons.advancements.AdvancementCriteria;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Mixin(BeaconBlockEntity.class)
-public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityController {
+public abstract class BeaconBlockEntityEntityMixin extends BlockEntity implements BeaconBlockEntityController {
+
+    @Shadow
+    public static final List<List<Holder<MobEffect>>> BEACON_EFFECTS = List.of(
+            List.of(MobEffects.MOVEMENT_SPEED, MobEffects.DIG_SPEED),
+            List.of(MobEffects.DAMAGE_RESISTANCE, MobEffects.JUMP),
+            List.of(MobEffects.DAMAGE_BOOST),
+            List.of(MobEffects.REGENERATION),
+            List.of(MobEffects.LUCK),
+            List.of(MobEffects.HEALTH_BOOST)
+    );
+
+    @Shadow
+    private static final Set<Holder<MobEffect>> VALID_EFFECTS = BEACON_EFFECTS.stream()
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
 
     @Unique
     Block majorityBlock;
+
+    public BeaconBlockEntityEntityMixin(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
+        super(type, pos, blockState);
+    }
 
     @Override
     public Optional<Block> improvedbeacons$getMajorityBlock() {
         return Optional.ofNullable(this.majorityBlock);
     }
-
     @Override
     public void improvedbeacons$setMajorityBlock(Block block) {
         this.majorityBlock = block;
@@ -45,14 +72,76 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
     // affects radius, 0 = full iron, 37 = full gold, 50 = full diamond/emerald, 100 = full netherite
     @Unique
     int power = 0;
-
     public int improvedbeacons$getPower() {
         return this.power;
     }
-
     public void improvedbeacons$setPower(int power) {
         this.power = power;
     }
+
+    @Unique
+    @Nullable
+    Holder<MobEffect> tertiaryPower;
+    public Holder<MobEffect> improvedbeacons$getTertiaryPower(){
+        return this.tertiaryPower;
+    }
+    public void improvedbeacons$setTertiaryPower(Holder<MobEffect> tertiaryPower){
+        this.tertiaryPower = tertiaryPower;
+    }
+
+    @Shadow
+    List<BeaconBlockEntity.BeaconBeamSection> beamSections;
+    @Shadow
+    int levels;
+    @Shadow
+    Holder<MobEffect> primaryPower;
+    @Shadow
+    Holder<MobEffect> secondaryPower;
+
+    @Shadow
+    private final ContainerData dataAccess = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> BeaconBlockEntityEntityMixin.this.levels;
+                case 1 -> BeaconMenu.encodeEffect(BeaconBlockEntityEntityMixin.this.primaryPower);
+                case 2 -> BeaconMenu.encodeEffect(BeaconBlockEntityEntityMixin.this.secondaryPower);
+                case 3 -> BeaconMenu.encodeEffect(BeaconBlockEntityEntityMixin.this.tertiaryPower);
+                case 4 -> BeaconBlockEntityEntityMixin.this.power;
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case 0:
+                    BeaconBlockEntityEntityMixin.this.levels = value;
+                    break;
+                case 1:
+                    assert BeaconBlockEntityEntityMixin.this.level != null;
+                    if (!BeaconBlockEntityEntityMixin.this.level.isClientSide && !BeaconBlockEntityEntityMixin.this.beamSections.isEmpty()) {
+                        BeaconBlockEntity.playSound(BeaconBlockEntityEntityMixin.this.level, BeaconBlockEntityEntityMixin.this.worldPosition, SoundEvents.BEACON_POWER_SELECT);
+                    }
+
+                    BeaconBlockEntityEntityMixin.this.primaryPower = BeaconBlockEntity.filterEffect(BeaconMenu.decodeEffect(value));
+                    break;
+                case 2:
+                    BeaconBlockEntityEntityMixin.this.secondaryPower = BeaconBlockEntity.filterEffect(BeaconMenu.decodeEffect(value));
+                    break;
+                case 3:
+                    BeaconBlockEntityEntityMixin.this.tertiaryPower = BeaconBlockEntity.filterEffect(BeaconMenu.decodeEffect(value));
+                    break;
+                case 4:
+                    BeaconBlockEntityEntityMixin.this.power = value;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return BeaconBlockEntity.NUM_DATA_VALUES + ImprovedBeacons.DATA_NUM_VALUES;
+        }
+    };
 
     //ideas
     //reword gui and functionality
@@ -133,7 +222,7 @@ public abstract class BeaconBlockEntityEntityMixin implements BeaconBlockEntityC
 
     // fixes Beaconator advancement for levels > 4
     @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/critereon/ConstructBeaconTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;I)V"))
-    private static int injected(int levels){
+    private static int beaconatorLevelsFix(int levels){
         return Math.min(levels, 4);
     }
 }

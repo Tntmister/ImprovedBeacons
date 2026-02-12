@@ -1,0 +1,7 @@
+classTweaker v1 named
+accessible method net/minecraft/world/level/block/entity/BeaconBlockEntity filterEffect (Lnet/minecraft/core/Holder;)Lnet/minecraft/core/Holder;
+accessible class net/minecraft/client/gui/screens/inventory/BeaconScreen$BeaconButton
+accessible class net/minecraft/client/gui/screens/inventory/BeaconScreen$BeaconPowerButton
+accessible class net/minecraft/client/gui/screens/inventory/BeaconScreen$BeaconUpgradePowerButton
+accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen leftPos I
+accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen topPos I
