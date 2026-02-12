@@ -4,6 +4,7 @@ import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tntmister.improvedbeacons.advancements.AdvancementCriteria;
 
 public class ImprovedBeacons implements ModInitializer {
 	public static final String MOD_ID = "improved-beacons";
@@ -14,6 +15,7 @@ public class ImprovedBeacons implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		AdvancementCriteria.init();
 		LOGGER.info("Improved Beacons initialised!");
 	}
 }
