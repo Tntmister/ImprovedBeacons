@@ -8,8 +8,9 @@ import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementType;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
+import org.jspecify.annotations.NonNull;
 import tntmister.improvedbeacons.ImprovedBeacons;
 import tntmister.improvedbeacons.advancements.MaxedBeaconCriterion;
 
@@ -24,7 +25,7 @@ public class AdvancementsProvider extends FabricAdvancementProvider {
     }
 
     @Override
-    public void generateAdvancement(HolderLookup.Provider provider, Consumer<AdvancementHolder> consumer) {
+    public void generateAdvancement(HolderLookup.@NonNull Provider provider, @NonNull Consumer<AdvancementHolder> consumer) {
         Advancement.Builder.advancement()
             .display(
                 Items.BEACON,
@@ -35,7 +36,7 @@ public class AdvancementsProvider extends FabricAdvancementProvider {
                 true,
                 true,
                 true
-            ).parent(Advancement.Builder.advancement().build(ResourceLocation.parse("minecraft:nether/create_full_beacon")))
+            ).parent(Advancement.Builder.advancement().build(Identifier.parse("minecraft:nether/create_full_beacon")))
             .addCriterion("maxed_beacon", tntmister.improvedbeacons.advancements.AdvancementCriteria.MAXED_BEACON.createCriterion(new MaxedBeaconCriterion.Conditions(Optional.empty(), 100)))
             .save(consumer, ImprovedBeacons.MOD_ID + ":maxed_beacon");
     }

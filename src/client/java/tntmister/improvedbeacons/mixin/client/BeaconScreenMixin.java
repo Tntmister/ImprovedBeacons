@@ -7,7 +7,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.BeaconScreen;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.BeaconMenu;
@@ -38,7 +38,7 @@ public abstract class BeaconScreenMixin extends AbstractContainerScreen<BeaconMe
     private <T extends AbstractWidget & BeaconScreen.BeaconButton> void addBeaconButton(T beaconButton) {}
 
     @Unique
-    private static final ResourceLocation NEW_BEACON_LOCATION = ResourceLocation.fromNamespaceAndPath("improved-beacons", "textures/gui/container/beacon.png");
+    private static final Identifier NEW_BEACON_LOCATION = Identifier.fromNamespaceAndPath("improved-beacons", "textures/gui/container/beacon.png");
 
 
     @Inject(method = "init", at= @At("TAIL"))
@@ -47,8 +47,8 @@ public abstract class BeaconScreenMixin extends AbstractContainerScreen<BeaconMe
         this.addBeaconButton(This.new BeaconPowerButton(This.leftPos, This.topPos, (BeaconBlockEntity.BEACON_EFFECTS.get(4)).getFirst(), false, 4));
     }
 
-    @ModifyArg(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIIII)V"))
-    protected ResourceLocation overrideBackground(ResourceLocation originalImage){
+    @ModifyArg(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
+    protected Identifier overrideBackground(Identifier originalImage){
         return NEW_BEACON_LOCATION;
     }
 

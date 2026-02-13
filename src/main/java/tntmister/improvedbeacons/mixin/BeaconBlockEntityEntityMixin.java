@@ -16,6 +16,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BeaconBeamOwner;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -40,9 +41,9 @@ public abstract class BeaconBlockEntityEntityMixin extends BlockEntity implement
 
     @Shadow
     public static final List<List<Holder<MobEffect>>> BEACON_EFFECTS = List.of(
-            List.of(MobEffects.MOVEMENT_SPEED, MobEffects.DIG_SPEED),
-            List.of(MobEffects.DAMAGE_RESISTANCE, MobEffects.JUMP),
-            List.of(MobEffects.DAMAGE_BOOST),
+            List.of(MobEffects.SPEED, MobEffects.HASTE),
+            List.of(MobEffects.RESISTANCE, MobEffects.JUMP_BOOST),
+            List.of(MobEffects.STRENGTH),
             List.of(MobEffects.REGENERATION),
             List.of(MobEffects.LUCK),
             List.of(MobEffects.HEALTH_BOOST)
@@ -90,7 +91,7 @@ public abstract class BeaconBlockEntityEntityMixin extends BlockEntity implement
     }
 
     @Shadow
-    List<BeaconBlockEntity.BeaconBeamSection> beamSections;
+    private List<BeaconBeamOwner.Section> checkingBeamSections;
     @Shadow
     int levels;
     @Shadow
@@ -120,7 +121,7 @@ public abstract class BeaconBlockEntityEntityMixin extends BlockEntity implement
                     break;
                 case 1:
                     assert BeaconBlockEntityEntityMixin.this.level != null;
-                    if (!BeaconBlockEntityEntityMixin.this.level.isClientSide && !BeaconBlockEntityEntityMixin.this.beamSections.isEmpty()) {
+                    if (!BeaconBlockEntityEntityMixin.this.level.isClientSide() && !BeaconBlockEntityEntityMixin.this.checkingBeamSections.isEmpty()) {
                         BeaconBlockEntity.playSound(BeaconBlockEntityEntityMixin.this.level, BeaconBlockEntityEntityMixin.this.worldPosition, SoundEvents.BEACON_POWER_SELECT);
                     }
 
@@ -171,7 +172,7 @@ public abstract class BeaconBlockEntityEntityMixin extends BlockEntity implement
         return NEW_MAX_LEVELS;
     }
 
-    @Inject(method = "updateBase", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getMinBuildHeight()I"))
+    @Inject(method = "updateBase", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getMinY()I"))
     private static void updateBaseLayerLoopHEAD(Level level, int x, int y, int z, CallbackInfoReturnable<Integer> cir, @Share("blockLayerMap") LocalRef<Map<Block, Integer>> blockLayerMapRef){
         blockLayerMapRef.set(new HashMap<>());
     }
@@ -215,13 +216,13 @@ public abstract class BeaconBlockEntityEntityMixin extends BlockEntity implement
         ).orElse(radius);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/critereon/ConstructBeaconTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;I)V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/criterion/ConstructBeaconTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;I)V"))
     private static void triggerAdvancement(Level level, BlockPos pos, BlockState state, BeaconBlockEntity blockEntity, CallbackInfo ci, @Local(name = "serverPlayer") ServerPlayer serverPlayer){
         AdvancementCriteria.MAXED_BEACON.trigger(serverPlayer, ((BeaconBlockEntityController)blockEntity).improvedbeacons$getPower());
     }
 
     // fixes Beaconator advancement for levels > 4
-    @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/critereon/ConstructBeaconTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;I)V"))
+    @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/criterion/ConstructBeaconTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;I)V"))
     private static int beaconatorLevelsFix(int levels){
         return Math.min(levels, 4);
     }
