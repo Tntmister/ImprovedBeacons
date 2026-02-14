@@ -5,3 +5,5 @@ accessible class net/minecraft/client/gui/screens/inventory/BeaconScreen$BeaconP
 accessible class net/minecraft/client/gui/screens/inventory/BeaconScreen$BeaconUpgradePowerButton
 accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen leftPos I
 accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen topPos I
+accessible class net/minecraft/client/gui/screens/inventory/BeaconScreen$BeaconConfirmButton
+accessible class net/minecraft/client/gui/screens/inventory/BeaconScreen$BeaconCancelButton

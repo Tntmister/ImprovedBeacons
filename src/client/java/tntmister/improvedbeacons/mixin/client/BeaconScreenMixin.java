@@ -75,6 +75,8 @@ public abstract class BeaconScreenMixin extends AbstractContainerScreen<BeaconMe
         );
         beaconPowerButton2.active = false;
         this.addBeaconButton(beaconPowerButton2);
+        this.addBeaconButton(This.new BeaconConfirmButton(this.leftPos + 164, this.topPos + 107));
+        this.addBeaconButton(This.new BeaconCancelButton(this.leftPos + 190, this.topPos + 107));
         ci.cancel();
     }
 }
