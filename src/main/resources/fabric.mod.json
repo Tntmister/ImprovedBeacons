@@ -22,6 +22,9 @@
 		],
 		"fabric-datagen": [
 			"tntmister.improvedbeacons.datagen.DataGenerator"
+		],
+		"modmenu": [
+			"tntmister.improvedbeacons.ModMenuImplementation"
 		]
 	},
 	"accessWidener" : "improved-beacons.classtweaker",
@@ -36,6 +39,7 @@
 		"fabricloader": ">=0.18.4",
 		"minecraft": "1.21.11",
 		"java": ">=21",
-		"fabric-api": "*"
+		"fabric-api": "*",
+		"yet_another_config_lib_v3": ">=3.6.1+1.21-fabric"
 	}
 }
