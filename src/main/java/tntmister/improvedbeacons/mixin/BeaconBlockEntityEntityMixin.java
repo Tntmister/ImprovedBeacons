@@ -211,7 +211,7 @@ public abstract class BeaconBlockEntityEntityMixin extends BlockEntity implement
 
     // new beacon radius formula
     // base radius of 16, with additional 10 radius per pyramid layer, increased
-    @ModifyVariable(method = "applyEffects", at = @At("STORE"), name = "d")
+    @ModifyVariable(method = "applyEffects", at = @At("STORE"))
     private static double applyEffects(double radius, @Local(argsOnly = true) Level level, @Local(argsOnly = true) BlockPos blockPos, @Local(argsOnly = true) int beaconLevel){
         return level.getBlockEntity(blockPos, BlockEntityType.BEACON).map(blockEntity ->
                 (1 +  3 * (double)((BeaconBlockEntityController) blockEntity).improvedbeacons$getPower() / 100) * (beaconLevel * 8 + 16)
@@ -219,7 +219,7 @@ public abstract class BeaconBlockEntityEntityMixin extends BlockEntity implement
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/criterion/ConstructBeaconTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;I)V"))
-    private static void triggerAdvancement(Level level, BlockPos pos, BlockState state, BeaconBlockEntity blockEntity, CallbackInfo ci, @Local(name = "serverPlayer") ServerPlayer serverPlayer){
+    private static void triggerAdvancement(Level level, BlockPos pos, BlockState state, BeaconBlockEntity blockEntity, CallbackInfo ci, @Local ServerPlayer serverPlayer){
         AdvancementCriteria.MAXED_BEACON.trigger(serverPlayer, ((BeaconBlockEntityController)blockEntity).improvedbeacons$getPower());
     }
 
