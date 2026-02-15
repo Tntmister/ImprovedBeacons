@@ -194,7 +194,9 @@ public abstract class BeaconBlockEntityEntityMixin extends BlockEntity implement
         Map<Block, Integer> blockMap = blockMapRef.get();
         // find the most common block in the pyramid
         blockMap.entrySet().stream().max(Map.Entry.comparingByValue()).ifPresentOrElse(
-                blockIntegerEntry -> beaconBlockController.improvedbeacons$setMajorityBlock(blockIntegerEntry.getKey()),
+                blockIntegerEntry -> {
+                    if (blockIntegerEntry.getValue() > 0) beaconBlockController.improvedbeacons$setMajorityBlock(blockIntegerEntry.getKey());
+                },
                 () -> beaconBlockController.improvedbeacons$setMajorityBlock(null)
         );
 
